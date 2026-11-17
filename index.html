@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#060a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>html,body{overscroll-behavior:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}</style>
 <title>SPADA DUELLO — FENCING</title>
 <style>
 :root{
@@ -1608,6 +1612,28 @@ if(testMode){
     tick:ms=>{const n=Math.ceil(ms/16.6667);for(let i=0;i<n;i++)update(1/60);draw();}
   };
 }
+})();
+</script>
+<script>
+/* Mobile: nasconde la barra del browser (schermo intero al primo tocco) */
+(()=>{
+  if(!matchMedia('(pointer:coarse)').matches)return;
+  const de=document.documentElement;
+  if(navigator.standalone||matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches)return;
+  let tried=false;
+  function hideBars(){
+    if(tried)return;tried=true;
+    const rf=de.requestFullscreen||de.webkitRequestFullscreen;
+    if(rf){
+      try{
+        const r=rf.call(de,{navigationUI:'hide'});
+        if(r&&r.then)r.then(()=>{try{screen.orientation.lock('landscape').catch(()=>{});}catch(e){}}).catch(()=>{});
+      }catch(e){}
+    }
+    setTimeout(()=>window.scrollTo(0,1),80);
+  }
+  addEventListener('touchend',hideBars,{passive:true});
+  addEventListener('click',hideBars);
 })();
 </script>
 </body>
