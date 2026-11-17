@@ -1,32 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scherma Spada Game</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#060a10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css">
+<title>SPADA DUELLO — FENCING</title>
+
 </head>
 <body>
+<div class="viewport">
+  <div class="stage">
+    <!-- TOP HUD BAR -->
+    <header class="top-hud" aria-label="Segnapunti assalto">
+      <div class="player-banner left" id="bannerLeft">
+        <div class="fencer-id">
+          <div class="flag-ita" title="Italia"></div>
+          <span class="fencer-name">TU · SPADISTA</span>
+        </div>
+        <div class="hud-score blue" id="pScore">0</div>
+      </div>
 
-    <!-- Banner Sponsor Sinistro -->
-    <div class="sponsor-banner sponsor-left">
-        <a href="#" target="_blank" rel="noopener noreferrer">
-            <img src="images/sponsor-left.png" alt="Sponsor Sinistro">
-        </a>
+      <div class="center-clock">
+        <span class="clock-label">TEMPO</span>
+        <span class="clock-time" id="clock">03:00</span>
+        <span class="clock-round" id="roundIndicator">0/5</span>
+      </div>
+
+      <div class="player-banner right" id="bannerRight">
+        <div class="hud-score red" id="cScore">0</div>
+        <div class="fencer-id">
+          <span class="fencer-name" id="cpuTitle">AVVERSARIO IA</span>
+          <div class="cpu-avatar" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4.2" fill="#b8c4d0" stroke="#4d5a6b" stroke-width="1.2"/>
+              <path d="M5 20.5C5 16.8 8.1 14.5 12 14.5C15.9 14.5 19 16.8 19 20.5" fill="#94a3b5" stroke="#4d5a6b" stroke-width="1.2"/>
+              <path d="M10 7.8H11.2M12.8 7.8H14M10.8 10.2H13.2" stroke="#2c3542" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ARENA CANVAS 2D -->
+    <canvas id="game" width="1280" height="720" aria-label="Pedana di scherma Spada Duello"></canvas>
+
+    <!-- BOTTOM DOCK: 2 COMANDI A SINISTRA | 3 COMANDI A DESTRA -->
+    <section class="bottom-dock" aria-label="Comandi schermidore">
+      <div class="controls-row">
+        <!-- SINISTRA: Solo Indietro e Avanti -->
+        <div class="btn-group">
+          <button class="tact-btn btn-move" data-hold="back" title="Tieni premuto: A o Freccia Sinistra">
+            <span class="key-hint">A / ←</span>
+            <svg viewBox="0 0 24 24" fill="#d9e4f0"><path d="M16 4.5L7.5 12L16 19.5V4.5Z"/></svg>
+            <span class="lbl">INDIETRO</span>
+          </button>
+          <button class="tact-btn btn-move" data-hold="forward" title="Tieni premuto: D o Freccia Destra">
+            <span class="key-hint">D / →</span>
+            <svg viewBox="0 0 24 24" fill="#d9e4f0"><path d="M8 4.5L16.5 12L8 19.5V4.5Z"/></svg>
+            <span class="lbl">AVANTI</span>
+          </button>
+        </div>
+
+        <!-- DESTRA: Solo Affondo, Parata e Affondo al Piede -->
+        <div class="btn-group">
+          <button class="tact-btn btn-lunge" id="btnLunge" data-action="attack" title="Affondo al bersaglio grosso (Spazio / W / Freccia Su)">
+            <span class="key-hint">SPAZIO</span>
+            <svg viewBox="0 0 32 24" fill="none">
+              <circle cx="13" cy="6" r="2.5" fill="#3cf296"/>
+              <path d="M11.5 9.5L14.5 10L12.5 15.5L5.5 20.5M14 14.5L20 16.5L22 21M14.5 10.2L22 9.5L30 9.2M11 10.2L5.5 12.5" stroke="#3cf296" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="lbl">AFFONDO</span>
+          </button>
+
+          <button class="tact-btn btn-parry" id="btnParry" data-action="parry" title="Parata (S / Freccia Giù)">
+            <span class="key-hint">S / ↓</span>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L5 6V11.5C5 16.2 8 20.3 12 21.5C16 20.3 19 16.2 19 11.5V6L12 3Z" fill="rgba(245,184,65,0.28)" stroke="#ffd166" stroke-width="1.9" stroke-linejoin="round"/>
+              <path d="M12 5.2V19.2" stroke="#ffe599" stroke-width="1.2" opacity="0.7"/>
+            </svg>
+            <span class="lbl">PARATA</span>
+          </button>
+
+          <button class="tact-btn btn-foot" id="btnFoot" data-action="foot" title="Affondo al piede (E / X)">
+            <span class="key-hint">E / X</span>
+            <svg viewBox="0 0 32 24" fill="none">
+              <circle cx="12" cy="8.5" r="2.4" fill="#4ce2ff"/>
+              <path d="M11 11.5L14.5 12.5L12 17L5.5 21M14 16L20 17.5L22 21M14.5 12.5L21 16.5L29.5 20.5M10.5 12L5.5 11" stroke="#4ce2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="29.5" cy="20.5" r="1.6" fill="#aef4ff"/>
+            </svg>
+            <span class="lbl">AFFONDO AL PIEDE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra di Stato Inferiore + Selettore Difficoltà + Audio + Pausa -->
+      <div class="status-footer">
+        <div class="measure-box">
+          <span>Misura:</span>
+          <strong id="measure">Lunga</strong>
+          <div class="measure-bar" aria-hidden="true">
+            <div class="measure-fill" id="measureFill"></div>
+          </div>
+        </div>
+
+        <div class="tactical-status" role="status" aria-live="polite">
+          <span>Stato: <strong id="tactical">En garde</strong></span>
+          <span class="msg-sub" id="status">Cerca la misura, poi scegli tra Affondo, Parata o Affondo al piede.</span>
+        </div>
+
+        <div class="footer-actions">
+          <div class="diff-switch" role="group" aria-label="Livello difficoltà IA">
+            <button class="diff-btn" data-diff="facile">Facile</button>
+            <button class="diff-btn active" data-diff="normale">Normale</button>
+            <button class="diff-btn" data-diff="esperto">Esperto</button>
+          </div>
+          <button class="mini-pill-btn" id="audioToggle" title="Attiva/Disattiva suoni sala">🔊</button>
+          <button class="mini-pill-btn" id="pause" title="Pausa (Esc)">
+            <span class="pause-icon">II</span>
+            <span id="pauseLabel">Pausa</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODALE INIZIO / FINE ASSALTO -->
+    <div class="overlay show" id="overlay">
+      <div class="modal-card">
+        <h2 id="resultTitle">SPADA DUELLO</h2>
+        <p id="resultText">Assalto regolamentare ai 5 punti in 3 minuti.<br>Bersaglio valido su tutto il corpo: alterna l'affondo al bersaglio grosso con l'affondo al piede.</p>
+        <div class="modal-diff-grid" id="modalDiffGrid">
+          <div class="modal-diff-card" data-diff="facile">
+            <strong>FACILE</strong>
+            <small>Principiante</small>
+          </div>
+          <div class="modal-diff-card selected" data-diff="normale">
+            <strong>NORMALE</strong>
+            <small>Agonista</small>
+          </div>
+          <div class="modal-diff-card" data-diff="esperto">
+            <strong>ESPERTO</strong>
+            <small>Maestro d'Armi</small>
+          </div>
+        </div>
+        <button class="cta-btn" id="again">Inizia Assalto</button>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Contenitore Principale del Gioco -->
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-    </div>
-
-    <!-- Banner Sponsor Destro -->
-    <div class="sponsor-banner sponsor-right">
-        <a href="#" target="_blank" rel="noopener noreferrer">
-            <img src="images/sponsor-right.png" alt="Sponsor Destro">
-        </a>
-    </div>
-
-    <script src="game.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
